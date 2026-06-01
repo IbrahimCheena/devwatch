@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/DevWatch-Live-brightgreen?style=for-the-badge" />
+<a href="https://devwatch-two.vercel.app"><img src="https://img.shields.io/badge/DevWatch-Live-brightgreen?style=for-the-badge" /></a>
 <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" />
 <img src="https://img.shields.io/badge/Java-Spring Boot-green?style=for-the-badge&logo=spring" />
 <img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python" />
@@ -13,7 +13,7 @@
 
 **Connect any GitHub repo. See your codebase health in seconds.**
 
-[Live Demo](https://devwatch-two.vercel.app) · [Backend API](https://devwatch-production.up.railway.app/actuator/health) · [Report Bug](https://github.com/IbrahimCheena/devwatch/issues)
+[Live Demo](https://devwatch-two.vercel.app) · [Backend API](https://devwatch-production.up.railway.app/) · [Report Bug](https://github.com/IbrahimCheena/devwatch/issues)
 
 </div>
 
