@@ -55,4 +55,22 @@ Phase 4 complete — Full dashboard UI with animated charts, stat cards, CI/CD t
 
 Phase 5 complete — QA report page with markdown rendering, metadata panel and PDF export
 
-Phase 6 in progress — GitHub Actions CI/CD workflows
+Phase 6 complete — GitHub Actions workflows for CI/CD across all layers
+
+Phase 7 complete — Deployed to Vercel and Railway, fully live
+
+## Live Demo
+
+Frontend: https://devwatch-two.vercel.app
+
+Backend API: https://devwatch-production.up.railway.app
+
+## How to Use
+
+1. Go to https://devwatch-two.vercel.app
+2. Click Connect with GitHub and authorize the app
+3. Your repositories will load automatically
+4. Click any repo to open the analytics dashboard
+5. Click Run Scan to analyze code quality and test coverage
+6. Click Generate Report to create an AI powered QA report
+7. Export the report as a PDF
