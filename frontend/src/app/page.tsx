@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { motion } from 'framer-motion'
 
 const fadeUp = {
@@ -82,24 +83,22 @@ export default function LandingPage() {
       }}>
 
         {/* Blobs */}
-{[
-  { color: '#f4622a33', size: 420, top: -80 as number | undefined, right: -60 as number | undefined, bottom: undefined as number | undefined, left: undefined as number | undefined, animation: 'float1 9s ease-in-out infinite' },
-  { color: '#0d948822', size: 300, top: undefined as number | undefined, right: undefined as number | undefined, bottom: 40 as number | undefined, left: -40 as number | undefined, animation: 'float2 11s ease-in-out infinite' },
-  { color: '#d9770633', size: 200, top: undefined as number | undefined, right: undefined as number | undefined, bottom: undefined as number | undefined, left: undefined as number | undefined, animation: 'float3 7s ease-in-out infinite' },
-].map((blob, i) => (
+{([
+  { color: '#f4622a33', size: 420, extraStyle: { top: -80, right: -60 } as React.CSSProperties, animation: 'float1 9s ease-in-out infinite' },
+  { color: '#0d948822', size: 300, extraStyle: { bottom: 40, left: -40 } as React.CSSProperties, animation: 'float2 11s ease-in-out infinite' },
+  { color: '#d9770633', size: 200, extraStyle: { top: '50%', left: '60%' } as React.CSSProperties, animation: 'float3 7s ease-in-out infinite' },
+] as Array<{ color: string; size: number; extraStyle: React.CSSProperties; animation: string }>).map((blob, i) => (
   <div key={i} style={{
     position: 'absolute',
-    width: blob.size, height: blob.size,
+    width: blob.size,
+    height: blob.size,
     background: blob.color,
     borderRadius: '50%',
     filter: 'blur(60px)',
     opacity: 0.55,
-    pointerEvents: 'none',
-    top: blob.top,
-    right: blob.right,
-    bottom: blob.bottom,
-    left: blob.left,
+    pointerEvents: 'none' as React.CSSProperties['pointerEvents'],
     animation: blob.animation,
+    ...blob.extraStyle,
   }} />
 ))}
 
