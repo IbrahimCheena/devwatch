@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Syne, JetBrains_Mono } from 'next/font/google'
+import { Providers } from '@/components/Providers'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -32,7 +33,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${syne.variable} ${jetbrainsMono.variable}`}>
-      <body className={dmSans.className}>{children}</body>
+      <body className={dmSans.className}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

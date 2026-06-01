@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
+import { signIn } from 'next-auth/react'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -63,6 +64,7 @@ export default function LandingPage() {
           ))}
           <motion.button
             whileHover={{ scale: 1.04, background: 'var(--orange)' }}
+            onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
             style={{
               background: 'var(--ink)', color: 'var(--cream)',
               padding: '8px 20px', borderRadius: 100,
@@ -156,6 +158,7 @@ export default function LandingPage() {
           <motion.button
             whileHover={{ scale: 1.04, background: 'var(--orange)', boxShadow: '0 8px 28px rgba(244,98,42,0.35)' }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               background: 'var(--ink)', color: 'var(--cream)',
