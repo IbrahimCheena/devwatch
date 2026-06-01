@@ -75,73 +75,106 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pageWidth = doc.internal.pageSize.getWidth()
-      const margin = 20
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 24
       const maxWidth = pageWidth - margin * 2
-      let y = 20
+      let y = 0
 
+      doc.setFillColor(26, 20, 16)
+      doc.rect(0, 0, pageWidth, 40, 'F')
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(20)
-      doc.setTextColor(26, 20, 16)
-      doc.text(`QA Report — ${owner}/${repo}`, margin, y)
-      y += 10
-
+      doc.setFontSize(18)
+      doc.setTextColor(255, 255, 255)
+      doc.text('DevWatch', margin, 18)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
-      doc.setTextColor(107, 95, 82)
-      doc.text(`Generated: ${meta.generatedAt}`, margin, y)
-      y += 6
-      doc.text(`Quality Score: ${meta.qualityScore}/100  |  CI Pass Rate: ${meta.ciPassRate}%  |  Coverage: ${meta.coverage}%`, margin, y)
-      y += 10
+      doc.setTextColor(200, 190, 180)
+      doc.text('QA Health Report', margin, 28)
+      doc.setFontSize(9)
+      doc.text(`${owner}/${repo}  ·  Generated ${meta.generatedAt}`, pageWidth - margin, 28, { align: 'right' })
 
+      y = 52
+      doc.setFillColor(250, 248, 244)
+      doc.rect(margin, y, maxWidth, 22, 'F')
       doc.setDrawColor(232, 224, 212)
-      doc.line(margin, y, pageWidth - margin, y)
-      y += 8
+      doc.rect(margin, y, maxWidth, 22, 'S')
+      const metrics = [
+        { label: 'Quality Score', value: `${meta.qualityScore}/100` },
+        { label: 'CI Pass Rate', value: `${meta.ciPassRate}%` },
+        { label: 'Test Coverage', value: `${meta.coverage}%` },
+      ]
+      metrics.forEach((m, i) => {
+        const x = margin + (maxWidth / 3) * i + maxWidth / 6
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(13)
+        doc.setTextColor(26, 20, 16)
+        doc.text(m.value, x, y + 10, { align: 'center' })
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8)
+        doc.setTextColor(107, 95, 82)
+        doc.text(m.label, x, y + 17, { align: 'center' })
+      })
 
+      y = 86
       const lines = DEMO_REPORT.split('\n')
       for (const line of lines) {
-        if (y > 270) {
+        if (y > pageHeight - 20) {
           doc.addPage()
-          y = 20
+          y = 24
         }
         if (line.startsWith('## ')) {
-          y += 4
+          y += 6
+          doc.setFillColor(244, 98, 42)
+          doc.rect(margin, y - 4, 3, 12, 'F')
           doc.setFont('helvetica', 'bold')
-          doc.setFontSize(13)
+          doc.setFontSize(12)
           doc.setTextColor(26, 20, 16)
-          doc.text(line.replace('## ', ''), margin, y)
-          y += 7
+          doc.text(line.replace('## ', ''), margin + 7, y + 4)
+          y += 12
+          doc.setDrawColor(232, 224, 212)
+          doc.line(margin, y, pageWidth - margin, y)
+          y += 6
         } else if (line.startsWith('# ')) {
           doc.setFont('helvetica', 'bold')
-          doc.setFontSize(11)
-          doc.setTextColor(26, 20, 16)
+          doc.setFontSize(10)
+          doc.setTextColor(107, 95, 82)
           doc.text(line.replace('# ', ''), margin, y)
-          y += 6
+          y += 7
         } else if (line.startsWith('- ')) {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           doc.setTextColor(26, 20, 16)
-          const wrapped = doc.splitTextToSize('• ' + line.replace('- ', ''), maxWidth)
-          doc.text(wrapped, margin, y)
-          y += wrapped.length * 5 + 1
+          doc.setFillColor(244, 98, 42)
+          doc.circle(margin + 2, y - 1, 1, 'F')
+          const wrapped = doc.splitTextToSize(line.replace('- ', ''), maxWidth - 8)
+          doc.text(wrapped, margin + 6, y)
+          y += wrapped.length * 5.5 + 2
         } else if (line.match(/^\d+\./)) {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           doc.setTextColor(26, 20, 16)
-          const wrapped = doc.splitTextToSize(line, maxWidth)
-          doc.text(wrapped, margin, y)
-          y += wrapped.length * 5 + 1
+          const wrapped = doc.splitTextToSize(line, maxWidth - 4)
+          doc.text(wrapped, margin + 4, y)
+          y += wrapped.length * 5.5 + 2
         } else if (line.trim() !== '' && !line.startsWith('Generated:')) {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
-          doc.setTextColor(107, 95, 82)
+          doc.setTextColor(60, 50, 40)
           const cleaned = line.replace(/\*\*/g, '')
           const wrapped = doc.splitTextToSize(cleaned, maxWidth)
           doc.text(wrapped, margin, y)
-          y += wrapped.length * 5 + 1
+          y += wrapped.length * 5.5 + 2
         } else {
           y += 3
         }
       }
+
+      doc.setFillColor(26, 20, 16)
+      doc.rect(0, pageHeight - 12, pageWidth, 12, 'F')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(200, 190, 180)
+      doc.text('Generated by DevWatch · devwatch-two.vercel.app', pageWidth / 2, pageHeight - 4, { align: 'center' })
 
       const date = new Date().toISOString().split('T')[0]
       doc.save(`devwatch-report-${owner}-${repo}-${date}.pdf`)

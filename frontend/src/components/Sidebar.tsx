@@ -1,20 +1,22 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { LayoutDashboard, GitBranch, Activity, FileText, Settings, Zap } from 'lucide-react'
-import { usePathname } from 'next/navigation'
+import { LayoutDashboard, GitBranch, Activity, FileText, Settings, Zap, LogOut, Home } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: GitBranch, label: 'Repositories', href: '/dashboard/repos' },
-  { icon: Activity, label: 'CI/CD', href: '/dashboard/cicd' },
-  { icon: FileText, label: 'Reports', href: '/dashboard/reports' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+  { icon: GitBranch, label: 'Repositories', href: '/dashboard' },
+  { icon: Activity, label: 'CI/CD', href: '/dashboard' },
+  { icon: FileText, label: 'Reports', href: '/dashboard' },
+  { icon: Settings, label: 'Settings', href: '/dashboard' },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
     <motion.aside
@@ -51,16 +53,15 @@ export function Sidebar() {
           const Icon = item.icon
           const active = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
-            <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+            <Link key={item.label} href={item.href} style={{ textDecoration: 'none' }}>
               <motion.div
                 whileHover={{ x: 4 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 10,
-                  background: active ? 'var(--orange-light)' : 'transparent',
-                  color: active ? 'var(--orange)' : 'var(--ink-muted)',
-                  fontWeight: active ? 500 : 400,
-                  fontSize: 14, cursor: 'pointer',
+                  background: active && item.label === 'Dashboard' ? 'var(--orange-light)' : 'transparent',
+                  color: active && item.label === 'Dashboard' ? 'var(--orange)' : 'var(--ink-muted)',
+                  fontWeight: 400, fontSize: 14, cursor: 'pointer',
                   transition: 'background 0.2s, color 0.2s',
                 }}
               >
@@ -72,10 +73,39 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div style={{ marginTop: 'auto', paddingLeft: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-muted)' }}>
-          <Zap size={12} />
-          Powered by Mistral AI
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <motion.div
+            whileHover={{ x: 4 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px', borderRadius: 10,
+              color: 'var(--ink-muted)', fontSize: 14, cursor: 'pointer',
+              transition: 'color 0.2s',
+            }}
+          >
+            <Home size={16} />
+            Home
+          </motion.div>
+        </Link>
+        <motion.div
+          whileHover={{ x: 4 }}
+          onClick={() => signOut({ callbackUrl: '/' })}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 10,
+            color: 'var(--orange)', fontSize: 14, cursor: 'pointer',
+            transition: 'color 0.2s',
+          }}
+        >
+          <LogOut size={16} />
+          Sign Out
+        </motion.div>
+        <div style={{ paddingLeft: 8, paddingTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-muted)' }}>
+            <Zap size={12} />
+            Powered by Mistral AI
+          </div>
         </div>
       </div>
     </motion.aside>

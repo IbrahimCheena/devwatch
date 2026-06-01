@@ -59,9 +59,9 @@ export default function LandingPage() {
           DevWatch
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          {['Features', 'Docs', 'GitHub'].map((item) => (
-            <span key={item} style={{ fontSize: 14, color: 'var(--ink-muted)', cursor: 'pointer' }}>{item}</span>
-          ))}
+          <a href="https://github.com/IbrahimCheena/devwatch" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>GitHub</a>
+          <a href="https://github.com/IbrahimCheena/devwatch#features" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>Features</a>
+          <a href="https://github.com/IbrahimCheena/devwatch#readme" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>Docs</a>
           <motion.button
             whileHover={{ scale: 1.04, background: 'var(--orange)' }}
             onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
@@ -173,13 +173,6 @@ export default function LandingPage() {
             </svg>
             Connect with GitHub
           </motion.button>
-          <button style={{
-            fontSize: 14, color: 'var(--ink-muted)', display: 'flex',
-            alignItems: 'center', gap: 6, cursor: 'pointer',
-            border: 'none', background: 'none', fontFamily: 'inherit',
-          }}>
-            View live demo →
-          </button>
         </motion.div>
 
         {/* Mini Dashboard Preview */}
@@ -188,9 +181,10 @@ export default function LandingPage() {
           style={{
             background: 'var(--warm-white)',
             border: '1px solid var(--border)',
-            borderRadius: 20, padding: 20,
-            maxWidth: 640, width: '100%',
-            boxShadow: '0 8px 40px rgba(26,20,16,0.07)',
+            borderRadius: 20, padding: 24,
+            maxWidth: 720, width: '100%',
+            boxShadow: '0 20px 60px rgba(26,20,16,0.12)',
+            marginTop: 52,
           }}
         >
           {/* Window bar */}
@@ -217,7 +211,7 @@ export default function LandingPage() {
               }}>
                 <div style={{
                   fontFamily: 'var(--font-syne)', fontWeight: 800,
-                  fontSize: m.small ? 14 : 20, color: m.color,
+                  fontSize: m.small ? 14 : 24, color: m.color,
                   paddingTop: m.small ? 4 : 0,
                 }}>{m.val}</div>
                 <div style={{ fontSize: 10, color: 'var(--ink-muted)', marginTop: 2 }}>{m.label}</div>
@@ -228,7 +222,7 @@ export default function LandingPage() {
           {/* CI chart */}
           <div style={{
             background: 'var(--cream)', border: '1px solid var(--border)',
-            borderRadius: 10, padding: 14, height: 80,
+            borderRadius: 10, padding: 14, height: 120,
             display: 'flex', alignItems: 'flex-end', gap: 6,
           }}>
             {ciData.map((bar, i) => (

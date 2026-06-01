@@ -31,37 +31,64 @@ export default function DashboardPage() {
         const sessionRes = await fetch('/api/auth/session')
         const sessionData = await sessionRes.json()
         const token = sessionData?.accessToken
-
         if (!token) {
           setRepos(DEMO_REPOS)
+          setUsingDemo(true)
           setLoading(false)
           return
         }
-
         const cleanBackendUrl = (backendUrl || '').replace(/\/$/, '')
         const res = await fetch(`${cleanBackendUrl}/api/repos`, {
           headers: { 'X-GitHub-Token': token }
         })
-
         if (res.ok) {
           const data = await res.json()
           if (data && data.length > 0) {
-            setRepos(data.map((r: any) => ({
-              owner: r.owner,
-              repo: r.name,
-              quality: 85,
-              ci: 88,
-              coverage: 72,
-            })))
+            const reposWithScores = await Promise.all(
+              data.map(async (r: any) => {
+                try {
+                  const coverageRes = await fetch(
+                    `${cleanBackendUrl}/api/repos/${r.owner}/${r.name}/coverage`,
+                    { headers: { 'X-GitHub-Token': token } }
+                  )
+                  if (coverageRes.ok) {
+                    const snapshots = await coverageRes.json()
+                    if (snapshots && snapshots.length > 0) {
+                      const latest = snapshots[0]
+                      return {
+                        owner: r.owner,
+                        repo: r.name,
+                        quality: Math.round(latest.qualityScore || 85),
+                        ci: Math.round((latest.coverageRatio || 0.88) * 100),
+                        coverage: Math.round((latest.coverageRatio || 0.72) * 100),
+                        scanned: true,
+                      }
+                    }
+                  }
+                } catch {}
+                return {
+                  owner: r.owner,
+                  repo: r.name,
+                  quality: 0,
+                  ci: 0,
+                  coverage: 0,
+                  scanned: false,
+                }
+              })
+            )
+            setRepos(reposWithScores)
             setUsingDemo(false)
           } else {
             setRepos(DEMO_REPOS)
+            setUsingDemo(true)
           }
         } else {
           setRepos(DEMO_REPOS)
+          setUsingDemo(true)
         }
       } catch {
         setRepos(DEMO_REPOS)
+        setUsingDemo(true)
       } finally {
         setLoading(false)
       }
@@ -197,20 +224,26 @@ export default function DashboardPage() {
                       Last scanned just now
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 20 }}>
-                    {[
-                      { label: 'Quality', value: r.quality, suffix: '', color: 'var(--teal)' },
-                      { label: 'CI', value: r.ci, suffix: '%', color: 'var(--orange)' },
-                      { label: 'Coverage', value: r.coverage, suffix: '%', color: 'var(--gold)' },
-                    ].map(m => (
-                      <div key={m.label} style={{ textAlign: 'center' }}>
-                        <div style={{ fontFamily: 'var(--font-syne)', fontSize: 18, fontWeight: 800, color: m.color }}>
-                          {m.value}{m.suffix}
+                  {(r as any).scanned === false ? (
+                    <div style={{ fontSize: 12, color: 'var(--ink-muted)', fontStyle: 'italic' }}>
+                      Run scan to see scores
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 20 }}>
+                      {[
+                        { label: 'Quality', value: r.quality, suffix: '', color: 'var(--teal)' },
+                        { label: 'CI', value: r.ci, suffix: '%', color: 'var(--orange)' },
+                        { label: 'Coverage', value: r.coverage, suffix: '%', color: 'var(--gold)' },
+                      ].map(m => (
+                        <div key={m.label} style={{ textAlign: 'center' }}>
+                          <div style={{ fontFamily: 'var(--font-syne)', fontSize: 18, fontWeight: 800, color: m.color }}>
+                            {m.value}{m.suffix}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--ink-muted)' }}>{m.label}</div>
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-muted)' }}>{m.label}</div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                   <div style={{ fontSize: 18, color: 'var(--ink-muted)' }}>→</div>
                 </motion.div>
               </Link>
