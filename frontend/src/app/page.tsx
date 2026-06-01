@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { signIn } from 'next-auth/react'
 
@@ -32,7 +32,63 @@ const marqueeItems = [
   'Supabase', 'Vercel',
 ]
 
+function Particles() {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 3 + 1,
+    duration: Math.random() * 10 + 8,
+    delay: Math.random() * 5,
+  }))
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0, 0.6, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          style={{
+            position: 'absolute',
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            background: 'var(--orange)',
+            borderRadius: '50%',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function LandingPage() {
+  const [displayText, setDisplayText] = useState('')
+  const fullText = 'Connect any GitHub repo and get real-time CI/CD monitoring, test coverage trends, and automated QA reports — all in one dashboard.'
+
+  useEffect(() => {
+    let i = 0
+    const timer = setInterval(() => {
+      if (i < fullText.length) {
+        setDisplayText(fullText.slice(0, i + 1))
+        i++
+      } else {
+        clearInterval(timer)
+      }
+    }, 18)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div style={{ background: 'var(--cream)', minHeight: '100vh', overflowX: 'hidden' }}>
 
@@ -85,24 +141,26 @@ export default function LandingPage() {
       }}>
 
         {/* Blobs */}
-{([
-  { color: '#f4622a33', size: 420, extraStyle: { top: -80, right: -60 } as React.CSSProperties, animation: 'float1 9s ease-in-out infinite' },
-  { color: '#0d948822', size: 300, extraStyle: { bottom: 40, left: -40 } as React.CSSProperties, animation: 'float2 11s ease-in-out infinite' },
-  { color: '#d9770633', size: 200, extraStyle: { top: '50%', left: '60%' } as React.CSSProperties, animation: 'float3 7s ease-in-out infinite' },
-] as Array<{ color: string; size: number; extraStyle: React.CSSProperties; animation: string }>).map((blob, i) => (
-  <div key={i} style={{
-    position: 'absolute',
-    width: blob.size,
-    height: blob.size,
-    background: blob.color,
-    borderRadius: '50%',
-    filter: 'blur(60px)',
-    opacity: 0.55,
-    pointerEvents: 'none' as React.CSSProperties['pointerEvents'],
-    animation: blob.animation,
-    ...blob.extraStyle,
-  }} />
-))}
+        {([
+          { color: '#f4622a33', size: 420, extraStyle: { top: -80, right: -60 } as React.CSSProperties, animation: 'float1 9s ease-in-out infinite' },
+          { color: '#0d948822', size: 300, extraStyle: { bottom: 40, left: -40 } as React.CSSProperties, animation: 'float2 11s ease-in-out infinite' },
+          { color: '#d9770633', size: 200, extraStyle: { top: '50%', left: '60%' } as React.CSSProperties, animation: 'float3 7s ease-in-out infinite' },
+        ] as Array<{ color: string; size: number; extraStyle: React.CSSProperties; animation: string }>).map((blob, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            width: blob.size,
+            height: blob.size,
+            background: blob.color,
+            borderRadius: '50%',
+            filter: 'blur(60px)',
+            opacity: 0.55,
+            pointerEvents: 'none' as React.CSSProperties['pointerEvents'],
+            animation: blob.animation,
+            ...blob.extraStyle,
+          }} />
+        ))}
+
+        <Particles />
 
         {/* Badge */}
         <motion.div
@@ -129,7 +187,7 @@ export default function LandingPage() {
           custom={0.25} variants={fadeUp} initial="hidden" animate="show"
           style={{
             fontFamily: 'var(--font-syne)', fontWeight: 800,
-            fontSize: 'clamp(36px, 5vw, 62px)',
+            fontSize: 'clamp(42px, 6vw, 76px)',
             lineHeight: 1.08, letterSpacing: '-2px',
             color: 'var(--ink)', maxWidth: 780, marginBottom: 20,
           }}
@@ -138,16 +196,18 @@ export default function LandingPage() {
           <span style={{ color: 'var(--orange)' }}>beautifully visible.</span>
         </motion.h1>
 
-        {/* Subtext */}
+        {/* Subtext — typing animation */}
         <motion.p
           custom={0.4} variants={fadeUp} initial="hidden" animate="show"
           style={{
             fontSize: 17, color: 'var(--ink-muted)',
             maxWidth: 480, lineHeight: 1.65,
             fontWeight: 300, marginBottom: 40,
+            minHeight: '3.3em',
           }}
         >
-          Connect any GitHub repo and get real-time CI/CD monitoring, test coverage trends, and automated QA reports — all in one dashboard.
+          {displayText}
+          <span style={{ borderRight: '2px solid var(--orange)', marginLeft: 2, animation: 'blink 1s step-end infinite' }} />
         </motion.p>
 
         {/* CTA */}
@@ -264,6 +324,25 @@ export default function LandingPage() {
             )
           )}
         </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          style={{
+            position: 'absolute',
+            bottom: 32,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+          }}
+        >
+          <span style={{ fontSize: 11, color: 'var(--ink-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Scroll</span>
+          <div style={{ width: 1, height: 32, background: 'linear-gradient(to bottom, var(--ink-muted), transparent)' }} />
+        </motion.div>
       </section>
 
       {/* FEATURE CARDS */}
@@ -272,14 +351,17 @@ export default function LandingPage() {
           { icon: '🔍', title: 'Code Quality Scanner', desc: 'Static analysis across your entire repo with a scored health report and actionable signals.', bg: 'var(--orange-light)' },
           { icon: '📈', title: 'CI/CD Health Monitor', desc: 'Pull GitHub Actions history and visualize pass/fail trends across every workflow run.', bg: 'var(--teal-light)' },
           { icon: '🤖', title: 'AI QA Reports', desc: 'Mistral-powered natural language summaries of your repo health — exportable as PDF.', bg: 'var(--gold-light)' },
-        ].map((card) => (
+        ].map((card, index) => (
           <motion.div
             key={card.title}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.15 }}
             whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(26,20,16,0.08)' }}
             style={{
               background: 'var(--warm-white)', border: '1px solid var(--border)',
               borderRadius: 16, padding: 24, cursor: 'default',
-              transition: 'border-color 0.25s',
             }}
           >
             <div style={{ width: 36, height: 36, background: card.bg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 14 }}>
