@@ -13,12 +13,50 @@ const DEMO_REPOS = [
   { owner: 'microsoft', repo: 'vscode', quality: 88, ci: 91, coverage: 72 },
 ]
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
-  const [repos] = useState(DEMO_REPOS)
+  const [repos, setRepos] = useState(DEMO_REPOS)
+  const [usingDemo, setUsingDemo] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200)
+    const fetchRepos = async () => {
+      try {
+        const sessionRes = await fetch('/api/auth/session')
+        const sessionData = await sessionRes.json()
+        const token = sessionData?.accessToken
+
+        if (!token) {
+          setLoading(false)
+          return
+        }
+
+        const res = await fetch(`${backendUrl}/api/repos`, {
+          headers: { 'X-GitHub-Token': token }
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.length > 0) {
+            setRepos(data.map((r: any) => ({
+              owner: r.owner,
+              repo: r.name,
+              quality: 85,
+              ci: 88,
+              coverage: 72,
+            })))
+            setUsingDemo(false)
+          }
+        }
+      } catch {
+        // backend not available, keep demo data
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timer = setTimeout(fetchRepos, 800)
     return () => clearTimeout(timer)
   }, [])
 
