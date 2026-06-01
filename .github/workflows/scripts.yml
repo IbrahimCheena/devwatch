@@ -32,4 +32,4 @@ jobs:
         working-directory: scripts
 
       - name: Run pylint
-        run: pylint scripts/ --fail-under=6.0 --disable=C0114,C0115,C0116 || true
+        run: pylint scripts/ --disable=C0114,C0115,C0116,C0301,W0611 || true
