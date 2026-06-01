@@ -20,6 +20,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
   const [exporting, setExporting] = useState(false)
   const [renderedHtml, setRenderedHtml] = useState('')
   const [reportContent, setReportContent] = useState('')
+  const [toast, setToast] = useState('')
   const [meta, setMeta] = useState<ReportMeta>({
     generatedAt: new Date().toLocaleString(),
     qualityScore: 0,
@@ -70,41 +71,11 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
     init()
   }, [owner, repo])
 
-  const handleGenerateReport = async () => {
-    setGenerating(true)
-    try {
-      const token = await getToken()
-      const cleanUrl = (backendUrl || '').replace(/\/$/, '')
-      const res = await fetch(
-        `${cleanUrl}/api/repos/${owner}/${repo}/report/generate`,
-        {
-          method: 'POST',
-          headers: { 'X-GitHub-Token': token }
-        }
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (data && data.content) {
-          setReportContent(data.content)
-          const html = marked(data.content) as string
-          setRenderedHtml(html)
-          setMeta({
-            generatedAt: new Date(data.generatedAt).toLocaleString(),
-            qualityScore: Math.round(data.qualityScore || 0),
-            ciPassRate: Math.round((data.ciPassRate || 0) * 100),
-            coverage: Math.round((data.coverageRatio || 0) * 100),
-          })
-          setHasReport(true)
-        }
-      }
-    } catch (err) {
-      console.error('Failed to generate report:', err)
-    }
-    setGenerating(false)
-  }
-
-  const handleExportPDF = async () => {
-    if (!reportContent) return
+  // handleExportPDF defined BEFORE handleGenerateReport so auto-download can call it
+  const handleExportPDF = async (content?: string, metaOverride?: ReportMeta) => {
+    const pdf_content = content || reportContent
+    const pdf_meta = metaOverride || meta
+    if (!pdf_content) return
     setExporting(true)
     try {
       const { jsPDF } = await import('jspdf')
@@ -126,7 +97,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       doc.setTextColor(200, 190, 180)
       doc.text('QA Health Report', margin, 28)
       doc.setFontSize(9)
-      doc.text(`${owner}/${repo}  ·  ${meta.generatedAt}`, pageWidth - margin, 28, { align: 'right' })
+      doc.text(`${owner}/${repo}  ·  ${pdf_meta.generatedAt}`, pageWidth - margin, 28, { align: 'right' })
 
       y = 52
       doc.setFillColor(250, 248, 244)
@@ -134,9 +105,9 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       doc.setDrawColor(232, 224, 212)
       doc.rect(margin, y, maxWidth, 22, 'S')
       const metrics = [
-        { label: 'Quality Score', value: `${meta.qualityScore}/100` },
-        { label: 'CI Pass Rate', value: `${meta.ciPassRate}%` },
-        { label: 'Coverage', value: `${meta.coverage}%` },
+        { label: 'Quality Score', value: `${pdf_meta.qualityScore}/100` },
+        { label: 'CI Pass Rate', value: `${pdf_meta.ciPassRate}%` },
+        { label: 'Coverage', value: `${pdf_meta.coverage}%` },
       ]
       metrics.forEach((m, i) => {
         const x = margin + (maxWidth / 3) * i + maxWidth / 6
@@ -151,7 +122,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       })
 
       y = 86
-      const lines = reportContent.split('\n')
+      const lines = pdf_content.split('\n')
       for (const line of lines) {
         if (y > pageHeight - 20) {
           doc.addPage()
@@ -219,6 +190,45 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
     setExporting(false)
   }
 
+  const handleGenerateReport = async () => {
+    setGenerating(true)
+    try {
+      const token = await getToken()
+      const cleanUrl = (backendUrl || '').replace(/\/$/, '')
+      const res = await fetch(
+        `${cleanUrl}/api/repos/${owner}/${repo}/report/generate`,
+        {
+          method: 'POST',
+          headers: { 'X-GitHub-Token': token }
+        }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.content) {
+          const newMeta: ReportMeta = {
+            generatedAt: new Date(data.generatedAt).toLocaleString(),
+            qualityScore: Math.round(data.qualityScore || 0),
+            ciPassRate: Math.round((data.ciPassRate || 0) * 100),
+            coverage: Math.round((data.coverageRatio || 0) * 100),
+          }
+          setReportContent(data.content)
+          const html = marked(data.content) as string
+          setRenderedHtml(html)
+          setMeta(newMeta)
+          setHasReport(true)
+          setToast('AI Report generated successfully')
+          setTimeout(() => setToast(''), 3000)
+          setTimeout(async () => {
+            await handleExportPDF(data.content, newMeta)
+          }, 500)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate report:', err)
+    }
+    setGenerating(false)
+  }
+
   return (
     <div>
       <motion.div
@@ -258,7 +268,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
               <motion.button
                 whileHover={{ scale: 1.03, background: 'var(--orange)' }}
                 whileTap={{ scale: 0.97 }}
-                onClick={handleExportPDF}
+                onClick={() => handleExportPDF()}
                 disabled={exporting}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -383,7 +393,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleExportPDF}
+              onClick={() => handleExportPDF()}
               disabled={exporting}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center',
@@ -399,6 +409,23 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
           )}
         </motion.div>
       </div>
+
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed', bottom: 32, right: 32, zIndex: 999,
+            background: 'var(--ink)', color: 'var(--cream)',
+            padding: '12px 24px', borderRadius: 100,
+            fontSize: 14, fontWeight: 500,
+            boxShadow: '0 8px 32px rgba(26,20,16,0.25)',
+          }}
+        >
+          ✓ {toast}
+        </motion.div>
+      )}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
