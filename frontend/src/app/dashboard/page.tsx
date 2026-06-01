@@ -32,7 +32,8 @@ export default function DashboardPage() {
           return
         }
 
-        const res = await fetch(`${backendUrl}/api/repos`, {
+        const cleanBackendUrl = (backendUrl || '').replace(/\/$/, '')
+        const res = await fetch(`${cleanBackendUrl}/api/repos`, {
           headers: { 'X-GitHub-Token': token }
         })
 
