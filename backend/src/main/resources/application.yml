@@ -15,6 +15,9 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  mvc:
+    pathmatch:
+      use-suffix-pattern: false
   jackson:
     property-naming-strategy: SNAKE_CASE
     serialization:
