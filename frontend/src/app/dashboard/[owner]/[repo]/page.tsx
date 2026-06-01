@@ -39,14 +39,36 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
   const [generating, setGenerating] = useState(false)
   const [ciData] = useState(generateCIData)
   const [coverageData] = useState(generateCoverageData)
+  const [todoCount, setTodoCount] = useState(0)
+  const [qualityScore, setQualityScore] = useState(84)
 
   const passRate = Math.round((ciData.filter(d => d.passed).length / ciData.length) * 100)
   const latestCoverage = coverageData[coverageData.length - 1].coverage
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1000)
+    const t = setTimeout(async () => {
+      const sessionRes = await fetch('/api/auth/session')
+      const sessionData = await sessionRes.json()
+      const token = sessionData?.accessToken
+      const cleanUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '')
+      if (token) {
+        try {
+          const coverageRes = await fetch(
+            `${cleanUrl}/api/repos/${owner}/${repo}/coverage`,
+            { headers: { 'X-GitHub-Token': token } }
+          )
+          if (coverageRes.ok) {
+            const snapshots = await coverageRes.json()
+            if (snapshots && snapshots.length > 0) {
+              setQualityScore(Math.round(snapshots[0].qualityScore || 84))
+            }
+          }
+        } catch {}
+      }
+      setLoading(false)
+    }, 1000)
     return () => clearTimeout(t)
-  }, [])
+  }, [owner, repo])
 
   const handleScan = async () => {
     setScanning(true)
@@ -125,10 +147,10 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-          <StatCard label="Quality Score" value={84} suffix="/100" color="var(--teal)" delay={0} />
+          <StatCard label="Quality Score" value={qualityScore} suffix="/100" color="var(--teal)" delay={0} />
           <StatCard label="CI Pass Rate" value={passRate} suffix="%" color="var(--orange)" delay={0.1} />
           <StatCard label="Test Coverage" value={parseFloat(latestCoverage.toFixed(0))} suffix="%" color="var(--gold)" delay={0.2} />
-          <StatCard label="Open TODOs" value={23} color="var(--ink-muted)" delay={0.3} />
+          <StatCard label="Open TODOs" value={todoCount} color="var(--ink-muted)" delay={0.3} />
         </div>
       )}
 

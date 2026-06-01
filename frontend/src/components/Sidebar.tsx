@@ -8,10 +8,10 @@ import Link from 'next/link'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: GitBranch, label: 'Repositories', href: '/dashboard' },
-  { icon: Activity, label: 'CI/CD', href: '/dashboard' },
-  { icon: FileText, label: 'Reports', href: '/dashboard' },
-  { icon: Settings, label: 'Settings', href: '/dashboard' },
+  { icon: GitBranch, label: 'Repositories', href: '/dashboard/repos' },
+  { icon: Activity, label: 'CI/CD', href: '/dashboard/cicd' },
+  { icon: FileText, label: 'Reports', href: '/dashboard/reports' },
+  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ]
 
 export function Sidebar() {
@@ -59,9 +59,9 @@ export function Sidebar() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 10,
-                  background: active && item.label === 'Dashboard' ? 'var(--orange-light)' : 'transparent',
-                  color: active && item.label === 'Dashboard' ? 'var(--orange)' : 'var(--ink-muted)',
-                  fontWeight: 400, fontSize: 14, cursor: 'pointer',
+                  background: active ? 'var(--orange-light)' : 'transparent',
+                  color: active ? 'var(--orange)' : 'var(--ink-muted)',
+                  fontWeight: active ? 500 : 400, fontSize: 14, cursor: 'pointer',
                   transition: 'background 0.2s, color 0.2s',
                 }}
               >
@@ -90,7 +90,7 @@ export function Sidebar() {
         </Link>
         <motion.div
           whileHover={{ x: 4 }}
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: '/', redirect: true })}
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 12px', borderRadius: 10,
