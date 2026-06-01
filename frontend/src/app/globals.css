@@ -63,3 +63,8 @@ body {
   from { transform: scaleY(0); transform-origin: bottom; }
   to { transform: scaleY(1); transform-origin: bottom; }
 }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
