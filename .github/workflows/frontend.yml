@@ -1,3 +1,4 @@
+# CI pipeline for DevWatch frontend
 name: Frontend CI
 
 on:
