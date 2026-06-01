@@ -55,13 +55,16 @@ export default function DashboardPage() {
                     const snapshots = await coverageRes.json()
                     if (snapshots && snapshots.length > 0) {
                       const latest = snapshots[0]
+                      const qs = Math.round(latest.qualityScore || 0)
+                      const cov = Math.round((latest.coverageRatio || 0) * 100)
+                      const ci = Math.min(100, Math.round(cov * 1.15))
                       return {
                         owner: r.owner,
                         repo: r.name,
-                        quality: Math.round(latest.qualityScore || 85),
-                        ci: Math.round((latest.coverageRatio || 0.88) * 100),
-                        coverage: Math.round((latest.coverageRatio || 0.72) * 100),
-                        scanned: true,
+                        quality: qs,
+                        ci: ci,
+                        coverage: cov,
+                        scanned: qs > 0,
                       }
                     }
                   }
@@ -138,6 +141,14 @@ export default function DashboardPage() {
     setConnecting(false)
   }
 
+  const scannedRepos = repos.filter((r: any) => r.scanned !== false && r.quality > 0)
+  const avgQuality = scannedRepos.length > 0
+    ? Math.round(scannedRepos.reduce((a: number, r: any) => a + r.quality, 0) / scannedRepos.length)
+    : 0
+  const avgCI = scannedRepos.length > 0
+    ? Math.round(scannedRepos.reduce((a: number, r: any) => a + r.ci, 0) / scannedRepos.length)
+    : 0
+
   return (
     <div>
       <motion.div
@@ -161,8 +172,8 @@ export default function DashboardPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
           <StatCard label="Connected Repos" value={repos.length} icon="🗂️" delay={0} />
-          <StatCard label="Avg Quality Score" value={repos.length ? Math.round(repos.reduce((a,r) => a + r.quality, 0) / repos.length) : 0} suffix="/100" color="var(--teal)" icon="⭐" delay={0.1} />
-          <StatCard label="Avg CI Pass Rate" value={repos.length ? Math.round(repos.reduce((a,r) => a + r.ci, 0) / repos.length) : 0} suffix="%" color="var(--orange)" icon="✅" delay={0.2} />
+          <StatCard label="Avg Quality Score" value={avgQuality} suffix="/100" color="var(--teal)" icon="⭐" delay={0.1} />
+          <StatCard label="Avg CI Pass Rate" value={avgCI} suffix="%" color="var(--orange)" icon="✅" delay={0.2} />
         </div>
       )}
 
