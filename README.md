@@ -47,4 +47,6 @@ Animated dashboard with Framer Motion and Recharts
 
 Phase 1 complete — Next.js frontend scaffold with animated landing page
 
-Phase 2 in progress — Java Spring Boot backend
+Phase 2 complete — Java Spring Boot REST API with GitHub API integration and HuggingFace AI service
+
+Phase 3 in progress — Python analysis scripts
