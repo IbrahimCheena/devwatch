@@ -53,4 +53,6 @@ Phase 3 complete — Python static analysis, coverage tracking and AI report gen
 
 Phase 4 complete — Full dashboard UI with animated charts, stat cards, CI/CD trends and coverage tracking
 
-Phase 5 in progress — QA report page with PDF export
+Phase 5 complete — QA report page with markdown rendering, metadata panel and PDF export
+
+Phase 6 in progress — GitHub Actions CI/CD workflows
