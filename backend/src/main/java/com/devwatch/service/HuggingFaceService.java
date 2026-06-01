@@ -45,6 +45,8 @@ public class HuggingFaceService {
                 Be specific, actionable, and concise. [/INST]
                 """, owner, repo, qualityScore, ciPassRate * 100, coverageRatio * 100, testFiles, totalFiles);
 
+        log.info("Calling HuggingFace API for {}/{} with quality score {}", owner, repo, qualityScore);
+
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("inputs", prompt);
         ObjectNode parameters = objectMapper.createObjectNode();

@@ -3,43 +3,8 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState, useRef } from 'react'
 import { marked } from 'marked'
-import { FileText, Download, ArrowLeft, Clock, Star } from 'lucide-react'
+import { FileText, Download, ArrowLeft, Clock, Star, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
-
-const DEMO_REPORT = `# QA Health Report — vercel/next.js
-
-Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-
-## Executive Summary
-
-The vercel/next.js repository demonstrates strong engineering practices with a quality score of 91/100 and a CI pass rate of 94%. Test coverage sits at 78% which reflects a mature and well maintained codebase with consistent investment in automated testing.
-
-## Key Strengths
-
-- Exceptional CI/CD reliability with 94% pass rate across the last 30 workflow runs
-- Strong test coverage at 78% indicating systematic investment in code quality
-- Low TODO density suggesting issues are tracked and resolved promptly
-- Diverse language stack showing architectural flexibility
-- Well structured file organization with clear separation of concerns
-
-## Areas for Improvement
-
-- Test coverage could be pushed toward 85% for production critical paths
-- A small number of long running workflow jobs are inflating average CI duration
-- Some utility modules lack dedicated unit test files
-
-## Recommended Actions
-
-1. Add unit tests for the three largest utility modules to close the coverage gap
-2. Audit and split any CI jobs exceeding 8 minutes to improve feedback loop speed
-3. Review and resolve the 23 open TODO comments — prioritize those in core rendering paths
-4. Add a coverage threshold gate to the CI pipeline to prevent regressions below 75%
-5. Consider adding integration tests for critical user facing workflows
-
-## Overall Health Rating
-
-**Good** — This repository reflects strong engineering discipline. With targeted improvements to coverage and CI performance it is on track for an Excellent rating.
-`
 
 interface ReportMeta {
   generatedAt: string
@@ -51,25 +16,95 @@ interface ReportMeta {
 export default function ReportPage({ params }: { params: { owner: string; repo: string } }) {
   const { owner, repo } = params
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [renderedHtml, setRenderedHtml] = useState('')
-  const reportRef = useRef<HTMLDivElement>(null)
-
-  const meta: ReportMeta = {
+  const [reportContent, setReportContent] = useState('')
+  const [meta, setMeta] = useState<ReportMeta>({
     generatedAt: new Date().toLocaleString(),
-    qualityScore: 91,
-    ciPassRate: 94,
-    coverage: 78,
+    qualityScore: 0,
+    ciPassRate: 0,
+    coverage: 0,
+  })
+  const [hasReport, setHasReport] = useState(false)
+  const reportRef = useRef<HTMLDivElement>(null)
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+
+  const getToken = async () => {
+    const sessionRes = await fetch('/api/auth/session')
+    const sessionData = await sessionRes.json()
+    return sessionData?.accessToken || ''
+  }
+
+  const fetchLatestReport = async () => {
+    try {
+      const token = await getToken()
+      const cleanUrl = (backendUrl || '').replace(/\/$/, '')
+      const res = await fetch(
+        `${cleanUrl}/api/repos/${owner}/${repo}/report/latest`,
+        { headers: { 'X-GitHub-Token': token } }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.content) {
+          setReportContent(data.content)
+          const html = marked(data.content) as string
+          setRenderedHtml(html)
+          setMeta({
+            generatedAt: new Date(data.generatedAt).toLocaleString(),
+            qualityScore: Math.round(data.qualityScore || 0),
+            ciPassRate: Math.round((data.ciPassRate || 0) * 100),
+            coverage: Math.round((data.coverageRatio || 0) * 100),
+          })
+          setHasReport(true)
+        }
+      }
+    } catch {}
   }
 
   useEffect(() => {
-    const html = marked(DEMO_REPORT) as string
-    setRenderedHtml(html)
-    const t = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(t)
-  }, [])
+    const init = async () => {
+      await fetchLatestReport()
+      setLoading(false)
+    }
+    init()
+  }, [owner, repo])
+
+  const handleGenerateReport = async () => {
+    setGenerating(true)
+    try {
+      const token = await getToken()
+      const cleanUrl = (backendUrl || '').replace(/\/$/, '')
+      const res = await fetch(
+        `${cleanUrl}/api/repos/${owner}/${repo}/report/generate`,
+        {
+          method: 'POST',
+          headers: { 'X-GitHub-Token': token }
+        }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.content) {
+          setReportContent(data.content)
+          const html = marked(data.content) as string
+          setRenderedHtml(html)
+          setMeta({
+            generatedAt: new Date(data.generatedAt).toLocaleString(),
+            qualityScore: Math.round(data.qualityScore || 0),
+            ciPassRate: Math.round((data.ciPassRate || 0) * 100),
+            coverage: Math.round((data.coverageRatio || 0) * 100),
+          })
+          setHasReport(true)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate report:', err)
+    }
+    setGenerating(false)
+  }
 
   const handleExportPDF = async () => {
+    if (!reportContent) return
     setExporting(true)
     try {
       const { jsPDF } = await import('jspdf')
@@ -91,7 +126,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       doc.setTextColor(200, 190, 180)
       doc.text('QA Health Report', margin, 28)
       doc.setFontSize(9)
-      doc.text(`${owner}/${repo}  ·  Generated ${meta.generatedAt}`, pageWidth - margin, 28, { align: 'right' })
+      doc.text(`${owner}/${repo}  ·  ${meta.generatedAt}`, pageWidth - margin, 28, { align: 'right' })
 
       y = 52
       doc.setFillColor(250, 248, 244)
@@ -101,7 +136,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       const metrics = [
         { label: 'Quality Score', value: `${meta.qualityScore}/100` },
         { label: 'CI Pass Rate', value: `${meta.ciPassRate}%` },
-        { label: 'Test Coverage', value: `${meta.coverage}%` },
+        { label: 'Coverage', value: `${meta.coverage}%` },
       ]
       metrics.forEach((m, i) => {
         const x = margin + (maxWidth / 3) * i + maxWidth / 6
@@ -116,7 +151,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
       })
 
       y = 86
-      const lines = DEMO_REPORT.split('\n')
+      const lines = reportContent.split('\n')
       for (const line of lines) {
         if (y > pageHeight - 20) {
           doc.addPage()
@@ -156,7 +191,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
           const wrapped = doc.splitTextToSize(line, maxWidth - 4)
           doc.text(wrapped, margin + 4, y)
           y += wrapped.length * 5.5 + 2
-        } else if (line.trim() !== '' && !line.startsWith('Generated:')) {
+        } else if (line.trim() !== '') {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           doc.setTextColor(60, 50, 40)
@@ -197,39 +232,92 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
             Back to {owner}/{repo}
           </Link>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h1 style={{ fontFamily: 'var(--font-syne)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-1px' }}>
-            QA Report
+            QA Report — {owner}/{repo}
           </h1>
-          <motion.button
-            whileHover={{ scale: 1.03, background: 'var(--orange)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={handleExportPDF}
-            disabled={exporting}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'var(--ink)', color: 'var(--cream)',
-              border: 'none', borderRadius: 100,
-              padding: '10px 20px', fontSize: 13, fontWeight: 500,
-              cursor: exporting ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit', opacity: exporting ? 0.7 : 1,
-              transition: 'background 0.2s',
-            }}
-          >
-            <Download size={13} />
-            {exporting ? 'Exporting...' : 'Export PDF'}
-          </motion.button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleGenerateReport}
+              disabled={generating}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'var(--warm-white)', color: 'var(--ink)',
+                border: '1px solid var(--border)', borderRadius: 100,
+                padding: '10px 20px', fontSize: 13, fontWeight: 500,
+                cursor: generating ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit', opacity: generating ? 0.7 : 1,
+              }}
+            >
+              <RefreshCw size={13} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
+              {generating ? 'Generating AI Report...' : hasReport ? 'Regenerate Report' : 'Generate AI Report'}
+            </motion.button>
+            {hasReport && (
+              <motion.button
+                whileHover={{ scale: 1.03, background: 'var(--orange)' }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleExportPDF}
+                disabled={exporting}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'var(--ink)', color: 'var(--cream)',
+                  border: 'none', borderRadius: 100,
+                  padding: '10px 20px', fontSize: 13, fontWeight: 500,
+                  cursor: exporting ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: exporting ? 0.7 : 1,
+                  transition: 'background 0.2s',
+                }}
+              >
+                <Download size={13} />
+                {exporting ? 'Exporting...' : 'Export PDF'}
+              </motion.button>
+            )}
+          </div>
         </div>
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
-
         {loading ? (
           <div style={{
-            background: 'var(--warm-white)', border: '1px solid var(--border)', borderRadius: 16, padding: 32, height: 500,
+            background: 'var(--warm-white)', border: '1px solid var(--border)',
+            borderRadius: 16, height: 500,
             backgroundImage: 'linear-gradient(90deg, var(--border) 25%, var(--warm-white) 50%, var(--border) 75%)',
-            backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite',
+            backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite'
           }} />
+        ) : !hasReport ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{
+              background: 'var(--warm-white)', border: '1px solid var(--border)',
+              borderRadius: 16, padding: '80px 40px', textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
+            <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 8 }}>
+              No report yet
+            </h2>
+            <p style={{ fontSize: 14, color: 'var(--ink-muted)', marginBottom: 24, lineHeight: 1.6 }}>
+              Click Generate AI Report to create a personalized QA health report for {owner}/{repo} using Mistral 7B via HuggingFace.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleGenerateReport}
+              disabled={generating}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'var(--ink)', color: 'var(--cream)',
+                border: 'none', borderRadius: 100, padding: '12px 28px',
+                fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <RefreshCw size={14} style={{ animation: generating ? 'spin 1s linear infinite' : 'none' }} />
+              {generating ? 'Generating...' : 'Generate AI Report'}
+            </motion.button>
+          </motion.div>
         ) : (
           <motion.div
             ref={reportRef}
@@ -246,11 +334,7 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
             <div
               className="report-content"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              style={{
-                fontFamily: 'var(--font-dm)',
-                lineHeight: 1.75,
-                color: 'var(--ink)',
-              }}
+              style={{ fontFamily: 'var(--font-dm)', lineHeight: 1.75, color: 'var(--ink)' }}
             />
           </motion.div>
         )}
@@ -267,9 +351,9 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
             </div>
             {[
               { icon: Clock, label: 'Generated', value: meta.generatedAt },
-              { icon: Star, label: 'Quality Score', value: `${meta.qualityScore}/100` },
-              { icon: FileText, label: 'CI Pass Rate', value: `${meta.ciPassRate}%` },
-              { icon: FileText, label: 'Coverage', value: `${meta.coverage}%` },
+              { icon: Star, label: 'Quality Score', value: meta.qualityScore > 0 ? `${meta.qualityScore}/100` : 'Run scan first' },
+              { icon: FileText, label: 'CI Pass Rate', value: meta.ciPassRate > 0 ? `${meta.ciPassRate}%` : 'Pending' },
+              { icon: FileText, label: 'Coverage', value: meta.coverage > 0 ? `${meta.coverage}%` : 'Pending' },
             ].map((item) => {
               const Icon = item.icon
               return (
@@ -288,34 +372,36 @@ export default function ReportPage({ params }: { params: { owner: string; repo: 
 
           <div style={{ background: 'var(--orange-light)', border: '1px solid rgba(244,98,42,0.2)', borderRadius: 16, padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--orange)', marginBottom: 6 }}>
-              AI Generated
+              🤖 Powered by Mistral 7B
             </div>
             <div style={{ fontSize: 12, color: 'var(--ink-muted)', lineHeight: 1.6 }}>
-              This report was generated using Mistral 7B via HuggingFace free inference based on real repository metrics.
+              Reports are uniquely generated for {owner}/{repo} using real repository metrics via HuggingFace free inference. Each report is personalized to your actual codebase.
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleExportPDF}
-            disabled={exporting}
-            style={{
-              width: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              background: 'var(--ink)', color: 'var(--cream)',
-              border: 'none', borderRadius: 12, padding: '12px 0',
-              fontSize: 14, fontWeight: 500, cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <Download size={14} />
-            Download PDF Report
-          </motion.button>
+          {hasReport && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleExportPDF}
+              disabled={exporting}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: 8,
+                background: 'var(--ink)', color: 'var(--cream)',
+                border: 'none', borderRadius: 12, padding: '12px 0',
+                fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <Download size={14} />
+              Download PDF Report
+            </motion.button>
+          )}
         </motion.div>
       </div>
 
       <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .report-content h1 { font-family: var(--font-syne); font-size: 22px; font-weight: 800; color: var(--ink); margin: 0 0 16px; }
         .report-content h2 { font-family: var(--font-syne); font-size: 17px; font-weight: 700; color: var(--ink); margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
         .report-content p { margin: 0 0 14px; color: var(--ink); }

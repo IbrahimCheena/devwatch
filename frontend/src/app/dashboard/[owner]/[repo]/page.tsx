@@ -38,7 +38,7 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
   const [scanning, setScanning] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [ciData] = useState(generateCIData)
-  const [coverageData] = useState(generateCoverageData)
+  const [coverageData, setCoverageData] = useState(generateCoverageData)
   const [todoCount, setTodoCount] = useState(0)
   const [qualityScore, setQualityScore] = useState(84)
 
@@ -72,7 +72,28 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
 
   const handleScan = async () => {
     setScanning(true)
-    await new Promise(r => setTimeout(r, 2000))
+    try {
+      const sessionRes = await fetch('/api/auth/session')
+      const sessionData = await sessionRes.json()
+      const token = sessionData?.accessToken
+      const cleanUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '')
+      if (token) {
+        const res = await fetch(`${cleanUrl}/api/repos/${owner}/${repo}/scan`, {
+          method: 'POST',
+          headers: { 'X-GitHub-Token': token }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.quality_score) setQualityScore(Math.round(data.quality_score))
+          if (data.coverage_ratio) {
+            const newCoverage = parseFloat((data.coverage_ratio * 100).toFixed(1))
+            setCoverageData(prev => [...prev, { week: `W${prev.length + 1}`, coverage: newCoverage }])
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Scan failed:', err)
+    }
     setScanning(false)
   }
 
