@@ -14,7 +14,7 @@ const navItems = [
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -51,9 +51,10 @@ export function Sidebar() {
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {navItems.map((item) => {
           const Icon = item.icon
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+          const active = pathname === item.href ||
+            (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
           return (
-            <Link key={item.label} href={item.href} style={{ textDecoration: 'none' }}>
+            <Link key={item.label} href={item.href} style={{ textDecoration: 'none' }} onClick={() => onClose?.()}>
               <motion.div
                 whileHover={{ x: 4 }}
                 style={{
@@ -74,7 +75,7 @@ export function Sidebar() {
       </nav>
 
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
+        <Link href="/" style={{ textDecoration: 'none' }} onClick={() => onClose?.()}>
           <motion.div
             whileHover={{ x: 4 }}
             style={{
@@ -90,7 +91,7 @@ export function Sidebar() {
         </Link>
         <motion.div
           whileHover={{ x: 4 }}
-          onClick={() => signOut({ callbackUrl: '/', redirect: true })}
+          onClick={() => { onClose?.(); signOut({ callbackUrl: '/', redirect: true }) }}
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 12px', borderRadius: 10,

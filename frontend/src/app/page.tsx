@@ -114,7 +114,7 @@ export default function LandingPage() {
           />
           DevWatch
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <div className="nav-links-container" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <a href="https://github.com/IbrahimCheena/devwatch" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>GitHub</a>
           <a href="https://github.com/IbrahimCheena/devwatch#features" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>Features</a>
           <a href="https://github.com/IbrahimCheena/devwatch#readme" style={{ fontSize: 14, color: 'var(--ink-muted)', textDecoration: 'none', cursor: 'pointer' }}>Docs</a>

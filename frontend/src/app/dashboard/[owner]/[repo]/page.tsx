@@ -156,7 +156,7 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
           {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div className="repo-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
           <StatCard label="Quality Score" value={qualityScore} suffix="/100" color="var(--teal)" delay={0} />
           <StatCard label="CI Pass Rate" value={ciPassRate} suffix="%" color="var(--orange)" delay={0.1} />
           <StatCard label="Test Coverage" value={coverageRatio} suffix="%" color="var(--gold)" delay={0.2} />

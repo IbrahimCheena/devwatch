@@ -69,7 +69,7 @@ export default function CICDPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+          <div className="cicd-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
             {[
               { label: 'Total Runs', value: runs.length, color: 'var(--ink)' },
               { label: 'Pass Rate', value: `${passRate}%`, color: 'var(--teal)' },

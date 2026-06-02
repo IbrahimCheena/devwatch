@@ -236,7 +236,7 @@ This repository is ${qs >= 85 ? 'in outstanding health and ready for production 
         </div>
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="report-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
         {loading ? (
           <div style={{
             background: 'var(--warm-white)', border: '1px solid var(--border)',
