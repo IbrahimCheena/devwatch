@@ -97,6 +97,7 @@ export default function LandingPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="nav-container"
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -134,7 +135,7 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* HERO */}
-      <section style={{
+      <section className="hero-section" style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '120px 48px 80px', position: 'relative', textAlign: 'center',
@@ -185,6 +186,7 @@ export default function LandingPage() {
         {/* Headline */}
         <motion.h1
           custom={0.25} variants={fadeUp} initial="hidden" animate="show"
+          className="hero-headline"
           style={{
             fontFamily: 'var(--font-syne)', fontWeight: 800,
             fontSize: 'clamp(42px, 6vw, 76px)',
@@ -199,6 +201,7 @@ export default function LandingPage() {
         {/* Subtext — typing animation */}
         <motion.p
           custom={0.4} variants={fadeUp} initial="hidden" animate="show"
+          className="hero-sub"
           style={{
             fontSize: 17, color: 'var(--ink-muted)',
             maxWidth: 480, lineHeight: 1.65,
@@ -258,7 +261,7 @@ export default function LandingPage() {
           </div>
 
           {/* Metric cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
+          <div className="preview-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
             {[
               { val: '92', label: 'Quality score', color: 'var(--teal)' },
               { val: '87%', label: 'CI pass rate', color: 'var(--orange)' },
@@ -305,6 +308,7 @@ export default function LandingPage() {
         {/* Stats strip */}
         <motion.div
           custom={0.75} variants={fadeUp} initial="hidden" animate="show"
+          className="stats-strip"
           style={{ display: 'flex', gap: 40, marginTop: 52, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}
         >
           {[
@@ -346,7 +350,7 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURE CARDS */}
-      <section style={{ padding: '0 48px 80px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
+      <section className="features" style={{ padding: '0 48px 80px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
         {[
           { icon: '🔍', title: 'Code Quality Scanner', desc: 'Static analysis across your entire repo with a scored health report and actionable signals.', bg: 'var(--orange-light)' },
           { icon: '📈', title: 'CI/CD Health Monitor', desc: 'Pull GitHub Actions history and visualize pass/fail trends across every workflow run.', bg: 'var(--teal-light)' },
