@@ -55,8 +55,8 @@ export default function DashboardPage() {
                     const snapshots = await coverageRes.json()
                     if (snapshots && snapshots.length > 0) {
                       const latest = snapshots[0]
-                      const qs = Math.round(latest.qualityScore || 0)
-                      const cov = Math.round((latest.coverageRatio || 0) * 100)
+                      const qs = Math.round(latest.quality_score || 0)
+                      const cov = Math.round((latest.coverage_ratio || 0) * 100)
                       const ci = Math.min(100, Math.round(cov * 1.15))
                       return {
                         owner: r.owner,

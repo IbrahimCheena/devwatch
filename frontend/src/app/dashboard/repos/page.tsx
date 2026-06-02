@@ -72,7 +72,7 @@ export default function ReposPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'var(--font-syne)', fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{r.owner}/{r.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-muted)', marginTop: 2 }}>Branch: {r.defaultBranch || 'main'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-muted)', marginTop: 2 }}>Branch: {r.default_branch || 'main'}</div>
                   </div>
                   <ExternalLink size={14} color="var(--ink-muted)" />
                 </motion.div>

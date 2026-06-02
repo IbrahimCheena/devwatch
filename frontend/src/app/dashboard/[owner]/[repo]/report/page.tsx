@@ -68,8 +68,8 @@ This repository is ${qs >= 85 ? 'in outstanding health and ready for production 
             const snapshots = await coverageRes.json()
             if (snapshots && snapshots.length > 0) {
               const latest = snapshots[0]
-              const qs = Math.round(latest.qualityScore || 85)
-              const cov = Math.round((latest.coverageRatio || 0.74) * 100)
+              const qs = Math.round(latest.quality_score || 85)
+              const cov = Math.round((latest.coverage_ratio || 0.74) * 100)
               const ci = Math.round(cov * 1.15 > 100 ? 95 : cov * 1.15)
               setQualityScore(qs)
               setCoverage(cov)

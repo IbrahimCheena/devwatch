@@ -46,9 +46,9 @@ export default function RepoPage({ params }: { params: { owner: string; repo: st
         const snapshots = await coverageRes.json()
         if (snapshots && snapshots.length > 0) {
           const latest = snapshots[0]
-          setQualityScore(Math.round(latest.qualityScore || 0))
-          setCoverageRatio(Math.round((latest.coverageRatio || 0) * 100))
-          setCiPassRate(Math.min(100, Math.round((latest.coverageRatio || 0) * 115)))
+          setQualityScore(Math.round(latest.quality_score || 0))
+          setCoverageRatio(Math.round((latest.coverage_ratio || 0) * 100))
+          setCiPassRate(Math.min(100, Math.round((latest.coverage_ratio || 0) * 115)))
           setScanned(true)
           const history = snapshots.slice(0, 12).reverse().map((s: any, i: number) => ({
             week: `W${i + 1}`,
